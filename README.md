@@ -1,7 +1,6 @@
-# Delete When Unzip
-# 边解压边删除的解压工具
+# Delete When Unzip ——边解压边删除的解压工具
 ---
-## run
+## Usage
 ```
 pip install -r requirements.txt
 python delete_when_unzip.py filepath chunk_size(int)
