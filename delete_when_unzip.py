@@ -2,6 +2,7 @@
 # TODO: 设法完成分段zip的解压
 import os
 from stream_unzip import stream_unzip
+import sys
 
 def shift_then_truncate(file,chunk_size=1024):
     '''将文件向头部平移chunksize，并保留未被覆盖的后半部分'''
@@ -62,13 +63,12 @@ def main_unzip(file,chunk_size=1024):
                 f.close()
 
 if __name__ == '__main__':
-    multi_zip_seg = True
-    CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
-    if multi_zip_seg:
-        file_path_list = ['./testm.zip','./testm.z01']
-        for zip_files in file_path_list:
-            main_unzip(zip_files,CHUNK_SIZE)
-    else:
-        FILE_PATH = r'./test.zip'
-        
-        main_unzip(FILE_PATH,CHUNK_SIZE)
+    if len(sys.argv) <= 1 or len(sys.argv) >3:
+        raise AttributeError('Wrong input param')
+    if len(sys.argv) > 1:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
+    if len(sys.argv) > 2:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+    main_unzip(FILE_PATH,CHUNK_SIZE)
