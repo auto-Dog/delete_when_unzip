@@ -63,25 +63,13 @@ def main_unzip(file,chunk_size=1024):
                 f.close()
 
 if __name__ == '__main__':
-    # if len(sys.argv) <= 1 or len(sys.argv) >3:
-    #     raise AttributeError('Wrong input param')
-    # if len(sys.argv) > 1:
-    #     FILE_PATH = sys.argv[1]
-    #     CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
-    # if len(sys.argv) > 2:
-    #     FILE_PATH = sys.argv[1]
-    #     CHUNK_SIZE = eval(sys.argv[2])
-    # main_unzip(FILE_PATH,CHUNK_SIZE)
-    # os.remove(FILE_PATH)
-
-    multi_zip_seg = True
-    CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
-    if multi_zip_seg:
-        file_path_list = ['./testm.z01','./testm.zip']
-        for zip_files in file_path_list:
-            main_unzip(zip_files,CHUNK_SIZE)
-    else:
-        FILE_PATH = r'./testm.z01'
-        
-        main_unzip(FILE_PATH,CHUNK_SIZE)
-        os.remove(FILE_PATH)
+    if len(sys.argv) <= 1 or len(sys.argv) >3:
+        raise AttributeError('Wrong input param')
+    if len(sys.argv) > 1:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
+    if len(sys.argv) > 2:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+    main_unzip(FILE_PATH,CHUNK_SIZE)
+    os.remove(FILE_PATH)
