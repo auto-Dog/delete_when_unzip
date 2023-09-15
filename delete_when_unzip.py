@@ -47,11 +47,15 @@ def read_file_by_chunk(file,chunk_size=1024):
 def main_unzip(file,chunk_size=1024):
     '''在本地流式解压文件，边解压边删除'''
     file_chunks = read_file_by_chunk(file,chunk_size)
+    file_oripath,basename = os.path.split(file)
+    file_folder = os.path.splitext(basename)[0]
+    if not os.path.exists(os.path.join(file_oripath,file_folder)):
+        os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
     for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,chunk_size=chunk_size):
         # print('Processing chunk {}'.format(i))  # debug
         i+=1
-        file_path_name = os.path.join('./test_folder/',file_path_name.decode('GBK'))
+        file_path_name = os.path.join(file_oripath,file_folder,file_path_name.decode('GBK'))
         dir_path,file_name = os.path.split(file_path_name)  # 检查文件存放路径的健全性
         # print(dir_path,file_name) # debug
         if not os.path.exists(dir_path):
