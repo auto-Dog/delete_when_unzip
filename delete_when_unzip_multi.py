@@ -7,6 +7,8 @@ import sys
 def read_file_by_chunk(file_basepath,chunk_size=1024):
     '''按块读取文件，可指定块大小'''
     file_path,file_basename_zip = os.path.split(file_basepath)
+    if file_path == '':
+        file_path == './'
     file_basename,_ = os.path.splitext(file_basename_zip)
     file_list = []
     for root, dirs, files in os.walk(file_path):

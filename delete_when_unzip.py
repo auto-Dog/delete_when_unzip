@@ -5,7 +5,7 @@ from stream_unzip import stream_unzip
 import sys
 
 def shift_then_truncate(file,chunk_size=1024):
-    '''将文件向头部平移chunksize，并保留未被覆盖的后半部分'''
+    '''将文件向头部平移chunksize，并保留未被覆盖的后半部分（相当于删除头部chunksize字节）'''
     with open(file,'rb+') as f: 
         pointer = chunk_size
         while True:
@@ -14,6 +14,8 @@ def shift_then_truncate(file,chunk_size=1024):
             if not chunk:
                 break
             new_pointer = f.tell()
+            if new_pointer<=chunk_size: # 文件小于chunksize，不需要向头部移动
+                break
             f.seek(pointer-chunk_size)
             f.write(chunk)  # 将第k段写入k-1段的空间内
             pointer = new_pointer   # 指向第k段末尾
@@ -30,7 +32,7 @@ def read_file_by_chunk(file,chunk_size=1024):
             pointer = f.tell()
             if not chunk:
                 return
-        shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向左移动，最后截断只保留这部分内容
+        shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向头部移动，相当于删除头部chunksize字节
         yield chunk
 # def remove_one_chunk(file,chunk_size=1024):
 #     '''删除文件头部若干长度的内容'''
