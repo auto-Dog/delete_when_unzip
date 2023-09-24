@@ -35,15 +35,16 @@ def remove_one_chunk(file):
     os.remove(file)
 
 
-def main_unzip(file,chunk_size=1024):
+def main_unzip(file,chunk_size=1024,password=None):
     '''在本地流式解压文件，边解压边删除'''
+    chunk_size = int(chunk_size)    # python IO函数只支持int值参数
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
     file_folder = os.path.splitext(basename)[0]
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
-    for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks):
+    for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,password=password,chunk_size=chunk_size):
         # print('Processing chunk {}'.format(i))  # debug
         i+=1
         file_path_name = os.path.join(file_oripath,file_folder,file_path_name.decode('GBK'))

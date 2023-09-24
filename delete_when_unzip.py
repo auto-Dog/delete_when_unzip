@@ -32,8 +32,9 @@ def read_file_by_chunk(file,chunk_size=1024):
             pointer = f.tell()
             if not chunk:
                 return
+            yield chunk
         shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向头部移动，相当于删除头部chunksize字节
-        yield chunk
+        
 # def remove_one_chunk(file,chunk_size=1024):
 #     '''删除文件头部若干长度的内容'''
 #     f_size = os.path.getsize(file)
@@ -46,15 +47,16 @@ def read_file_by_chunk(file,chunk_size=1024):
 #         f.seek(0)
 #     print('Removed {:.2f} MB'.format(chunk_size/1024/1024))
 
-def main_unzip(file,chunk_size=1024):
+def main_unzip(file,chunk_size=1024,password=None):
     '''在本地流式解压文件，边解压边删除'''
+    chunk_size = int(chunk_size)    # python IO函数只支持int值参数
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
     file_folder = os.path.splitext(basename)[0]
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
-    for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,chunk_size=chunk_size):
+    for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,password=password,chunk_size=chunk_size):
         # print('Processing chunk {}'.format(i))  # debug
         i+=1
         file_path_name = os.path.join(file_oripath,file_folder,file_path_name.decode('GBK'))
@@ -67,15 +69,15 @@ def main_unzip(file,chunk_size=1024):
                 for chunk in unzipped_chunks:
                     f.write(chunk)
                 f.close()
+    os.remove(file)
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 or len(sys.argv) >3:
         raise AttributeError('Wrong input param')
     if len(sys.argv) > 1:
         FILE_PATH = sys.argv[1]
-        CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
+        CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
     if len(sys.argv) > 2:
         FILE_PATH = sys.argv[1]
         CHUNK_SIZE = eval(sys.argv[2])
     main_unzip(FILE_PATH,CHUNK_SIZE)
-    os.remove(FILE_PATH)
