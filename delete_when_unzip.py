@@ -35,18 +35,6 @@ def read_file_by_chunk(file,chunk_size=1024):
             yield chunk
         shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向头部移动，相当于删除头部chunksize字节
         
-# def remove_one_chunk(file,chunk_size=1024):
-#     '''删除文件头部若干长度的内容'''
-#     f_size = os.path.getsize(file)
-#     # print(f_size)
-#     with open(file,'rb+') as f:
-#         if f_size<chunk_size:
-#             chunk_size = f_size
-#         f.seek(chunk_size)
-#         f.truncate(f_size-chunk_size)
-#         f.seek(0)
-#     print('Removed {:.2f} MB'.format(chunk_size/1024/1024))
-
 def main_unzip(file,chunk_size=1024,password=None):
     '''在本地流式解压文件，边解压边删除'''
     chunk_size = int(chunk_size)    # python IO函数只支持int值参数
