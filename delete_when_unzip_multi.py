@@ -11,10 +11,10 @@ def read_file_by_chunk(file_basepath,chunk_size=1024):
         file_path = './'
     file_basename,_ = os.path.splitext(file_basename_zip)
     file_list = []
-    for root, dirs, files in os.walk(file_path):
-        for file in files:
-            if file.startswith(file_basename):
-                file_list.append(os.path.join(root, file)) # 将按照z01,z02,...zip顺序排列
+    files = os.listdir(file_path)
+    for file in files:
+        if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
+            file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
     for file in file_list:
         with open(file,'rb') as f: 
             _,file_ext = os.path.splitext(file) 

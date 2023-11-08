@@ -1,13 +1,109 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-import subprocess
+from tkinter import ttk
+# import subprocess
+import threading
 from delete_when_unzip import main_unzip as single_unzip
 from delete_when_unzip_multi import main_unzip as multi_unzip
+import time
+import os
 
+def thread_it(func, *args):
+    '''将函数打包进线程'''
+    # 创建
+    t = threading.Thread(target=func, args=args) 
+    t.setDaemon(True) 
+    # 启动
+    t.start()
+
+class ProcessManager:
+    def __init__(self,mode:str,file_path:str,chunksize:int,password_str:str):
+        self.mode = mode
+        self.file_path = file_path
+        self.chunksize = chunksize
+        self.password_str = password_str
+        self.fsize = 0
+
+    def run(self):
+        self.progress_bar = ttk.Progressbar(window, orient='horizontal', length=200, mode='determinate')
+        self.progress_bar.pack(pady=10)
+        thread_it(self.pack_process)
+        thread_it(self.process_inquiry)
+
+    def pack_process(self):
+        try:
+            if self.mode == 'mode1':
+                unzip_func = single_unzip
+                self.fsize = os.path.getsize(self.file_path)*1.0
+            if self.mode == 'mode2':
+                unzip_func = multi_unzip
+                self.fsize = self.get_multi_filecounts()*1.0
+            unzip_func(self.file_path,self.chunksize,self.password_str)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            self.end_process()
+
+    def process_inquiry(self):
+        if self.fsize == 0: # 获取文件大小后才会执行
+            return
+        self.progress_bar['value'] = 1.0
+        velocity_bar = 0.1 # 0.1% per step -> 1% per sec
+        bar_top = 1.0
+        last_val = 0.0
+        new_val = 0.0
+        delta_n = 1
+        first_checkpoint_limit = 20
+        # 匀速更新进度条
+        while True:
+            if self.mode == 'mode1':
+                try:
+                    new_val = 100.0 * (self.fsize-os.path.getsize(self.file_path))/self.fsize
+                except:
+                    new_val = 100.0 # 处理完最后一个块后文件已经不存在,直接拉到100%进度
+            if self.mode == 'mode2':
+                new_val = 100.0 * (self.fsize-self.get_multi_filecounts()) / self.fsize
+            # 第一次更新进度条前并不知道进度条实际速度，预估值0.1可能偏大。故条进度条大于某一阈值且一直没有收到进度更新时，停止进度
+            if bar_top>=first_checkpoint_limit: 
+                velocity_bar = 0.0
+            bar_top = bar_top + velocity_bar
+            if new_val != last_val: # 获得新进度，更新速度和bar参数，取消限制
+                velocity_bar = abs(new_val-last_val)/delta_n
+                bar_top = new_val
+                last_val = new_val
+                first_checkpoint_limit = 100
+                delta_n = 0
+            # 更新进度条
+            self.progress_bar['value'] = bar_top
+            self.progress_bar.update()
+            time.sleep(0.1)
+            delta_n+=1
+            if new_val==100:
+                break
+        messagebox.showinfo("Successfully Unzipped!","Successfully Unzipped!")
+        self.end_process()
+
+    def get_multi_filecounts(self):
+        file_list = []
+        file_path,file_basename_zip = os.path.split(self.file_path)
+        if file_path == '':
+            file_path = './'
+        file_basename,_ = os.path.splitext(file_basename_zip)
+        files = os.listdir(file_path)
+        for file in files:
+            if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
+                file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
+        return len(file_list)
+
+    def end_process(self):
+        self.progress_bar['value'] = 100.0
+        run_state.set(" 运行 ")      # global var
+        run_button['state'] = 'normal'
+        self.progress_bar.pack_forget()
 
 def run_program():
-    run_button['state'] = 'disable'
+    run_button['state'] = 'disable' # global var
+    run_state.set("运行中...")      # global var
     file_path = file_entry.get()
     number = number_entry.get()
     number = eval(number)*1024*1024
@@ -18,22 +114,22 @@ def run_program():
         password_str = password_entry.get()
     else:
         password_str = None
-    try:
-        # 运行命令行程序
-        if mode == 'mode1':
-            single_unzip(file_path,number,password_str)
-            # result = subprocess.run(['python', './delete_when_unzip.py', file_path, number], capture_output=True, text=True)
-        elif mode == 'mode2':
-            multi_unzip(file_path,number,password_str)
-        #     result = subprocess.run(['python', './delete_when_unzip_multi.py', file_path, number], capture_output=True, text=True)
-        # output = result.stdout
-        # outerr = result.stderr
-        # if outerr:
-        #     raise RuntimeError(outerr)
-        messagebox.showinfo("Successfully Unzipped!","Successfully Unzipped!")
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-    run_button['state'] = 'normal'
+
+    process_unzip = ProcessManager(mode,file_path,number,password_str) # 采用多线程运行任务和控制进度条，非阻塞
+    process_unzip.run() 
+    # try:
+    #     # 运行命令行程序
+    #     if mode == 'mode1':
+    #         single_unzip(file_path,number,password_str)
+
+    #     elif mode == 'mode2':
+    #         multi_unzip(file_path,number,password_str)
+
+    #     messagebox.showinfo("Successfully Unzipped!","Successfully Unzipped!")
+    # except Exception as e:
+    #     messagebox.showerror("Error", str(e))
+    # run_state.set(" 运行 ")      # global var
+    # run_button['state'] = 'normal'
 
 def browse_file():
     file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),('All Files','*')])
@@ -84,10 +180,12 @@ radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mod
 radio_mode1.pack()
 radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
 radio_mode2.pack()
-var_mode.set("mode2")
+var_mode.set("mode1")
 
 # 创建运行按钮
-run_button = tk.Button(window, text="运行", command=run_program)
+run_state = tk.StringVar()
+run_state.set(" 运行 ")
+run_button = tk.Button(window, textvariable=run_state, command=run_program)
 run_button.pack()
 
 # 运行主循环
