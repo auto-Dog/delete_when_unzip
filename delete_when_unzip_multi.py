@@ -3,6 +3,7 @@
 import os
 from stream_unzip import stream_unzip
 import sys
+import re
 
 def read_file_by_chunk(file_basepath,chunk_size=1024):
     '''按块读取文件，可指定块大小'''
@@ -12,15 +13,22 @@ def read_file_by_chunk(file_basepath,chunk_size=1024):
     file_basename,_ = os.path.splitext(file_basename_zip)
     file_list = []
     files = os.listdir(file_path)
+    # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
+    pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
+    pattern2 = re.compile(rf"{re.escape(file_basename)}\.zip",re.I)
     for file in files:
-        if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
+        if pattern1.match(file) or pattern2.match(file):
+        # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
             file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
     for file in file_list:
         with open(file,'rb') as f: 
             _,file_ext = os.path.splitext(file) 
-            if file_ext == '.z01':
+            if file_ext == '.z01' or file_ext == '.Z01':
                 f.seek(4)   # .z01文件需要跳过头部4字节
-            while True:
+            while True: 
+                # TODO:
+                # 可以在下一个版本把单文件中的shift_then_truncate()功能加到解压分卷中，使得占用空间进一步减小
+                # 加入时注意：分卷逐渐减少至0kB时，需要os.remove()，并切换到下一个分卷。.z01仅在第一次读入时跳过头部
                 chunk = f.read(chunk_size)
                 pointer = f.tell()
                 # print('Processing chunk at location {}'.format(pointer))    # debug
