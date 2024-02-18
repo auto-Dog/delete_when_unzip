@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
@@ -105,12 +106,15 @@ class ProcessManager:
         if file_path == '':
             file_path = './'
         file_basename,_ = os.path.splitext(file_basename_zip)
+        if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+            file_basename,_ = os.path.splitext(file_basename)
         files = os.listdir(file_path)
         # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
         pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
         pattern2 = re.compile(rf"{re.escape(file_basename)}\.zip",re.I)
+        pattern3 = re.compile(rf"{re.escape(file_basename)}\.zip\.\d+",re.I)
         for file in files:
-            if pattern1.match(file) or pattern2.match(file):
+            if pattern1.match(file) or pattern2.match(file) or pattern3.match(file):
             # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
                 file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
         return len(file_list)
@@ -152,7 +156,7 @@ def run_program():
     # run_button['state'] = 'normal'
 
 def browse_file():
-    file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),('All Files','*')])
+    file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),('ZIP Seg Files','.zip.001'),('All Files','*')])
     file_entry.delete(0, tk.END)
     file_entry.insert(0, file_path)
 
@@ -201,6 +205,9 @@ radio_mode1.pack()
 radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
 radio_mode2.pack()
 var_mode.set("mode1")
+
+notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip或.zip.001文件)")
+notice.pack()
 
 # 创建运行按钮
 run_state = tk.StringVar()

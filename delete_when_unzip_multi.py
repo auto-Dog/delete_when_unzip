@@ -11,13 +11,16 @@ def read_file_by_chunk(file_basepath,chunk_size=1024):
     if file_path == '':
         file_path = './'
     file_basename,_ = os.path.splitext(file_basename_zip)
+    if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+        file_basename,_ = os.path.splitext(file_basename)
     file_list = []
     files = os.listdir(file_path)
     # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
     pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
     pattern2 = re.compile(rf"{re.escape(file_basename)}\.zip",re.I)
+    pattern3 = re.compile(rf"{re.escape(file_basename)}\.zip\.\d+",re.I)
     for file in files:
-        if pattern1.match(file) or pattern2.match(file):
+        if pattern1.match(file) or pattern2.match(file) or pattern3.match(file):
         # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
             file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
     for file in file_list:
@@ -35,7 +38,7 @@ def read_file_by_chunk(file_basepath,chunk_size=1024):
                 if not chunk:
                     break
                 yield chunk
-        remove_one_chunk(file)  # 完成一块的解压，删除该块压缩文件
+        remove_one_chunk(file)  # 完成一个分段文件的解压，删除该块压缩文件
     return
 
 def remove_one_chunk(file):
@@ -49,6 +52,8 @@ def main_unzip(file,chunk_size=1024,password=None):
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
     file_folder = os.path.splitext(basename)[0]
+    if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+        file_folder,_ = os.path.splitext(file_folder)
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
