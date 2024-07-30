@@ -49,9 +49,16 @@ class ProcessManager:
             if self.mode == 'mode2':
                 unzip_func = multi_unzip
                 self.fsize = self.get_multi_filecounts()*1.0
+            print(self.password_str)    # debug
             unzip_func(self.file_path,self.chunksize,self.password_str)
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            err_message = str(e)
+            print(err_message)
+            if 'Rar!' in err_message or '7z' in err_message or '14' in err_message:
+                err_message = '不支持该类型文件(与文件加密工具有关，尽管后缀是.zip)'
+            if '\'str\' object' in err_message:
+                err_message = '预计解压太慢，不建议用此工具(每GB将耗费2小时)'
+            messagebox.showerror("Error", err_message)
             self.end_process()
 
     def process_inquiry(self):

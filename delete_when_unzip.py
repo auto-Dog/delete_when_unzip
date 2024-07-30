@@ -4,6 +4,7 @@ import os
 from stream_unzip import stream_unzip
 import sys
 
+
 def shift_then_truncate(file,chunk_size=1024):
     '''将文件向头部平移chunksize，并保留未被覆盖的后半部分（相当于删除头部chunksize字节）'''
     with open(file,'rb+') as f: 
@@ -36,7 +37,7 @@ def read_file_by_chunk(file,chunk_size=1024):
         shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向头部移动，相当于删除头部chunksize字节
         
 def main_unzip(file,chunk_size=1024,password=None):
-    '''在本地流式解压文件，边解压边删除'''
+    '''在本地流式解压文件，边解压边删除. 注：password必须是二进制字符串'''
     chunk_size = int(chunk_size)    # python IO函数只支持int值参数
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
@@ -44,6 +45,8 @@ def main_unzip(file,chunk_size=1024,password=None):
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
+    # if password is not None:
+    #     password = password.encode()    # 必须是二进制字符串
     for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,password=password,chunk_size=chunk_size):
         # print('Processing chunk {}'.format(i))  # debug
         i+=1
@@ -69,3 +72,7 @@ if __name__ == '__main__':
         FILE_PATH = sys.argv[1]
         CHUNK_SIZE = eval(sys.argv[2])
     main_unzip(FILE_PATH,CHUNK_SIZE)
+
+    # from zipfile import ZipFile
+
+    # ZipFile.extract()
