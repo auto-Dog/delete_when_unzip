@@ -197,7 +197,7 @@ def toggle_entry_state():
     else:
         password_entry.config(state=tk.DISABLED)
 checkbox_var = tk.IntVar()
-checkbox = tk.Checkbutton(window, text="使用密码", variable=checkbox_var, command=toggle_entry_state)
+checkbox = tk.Checkbutton(window, text="使用密码:", variable=checkbox_var, command=toggle_entry_state)
 checkbox.pack()
 
 password_entry = tk.Entry(window, state=tk.DISABLED)
@@ -211,6 +211,11 @@ radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mod
 radio_mode1.pack()
 radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
 radio_mode2.pack()
+
+new_func_mode = tk.IntVar()
+new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
+new_func_mode_box.pack()
+# new_func_mode = 
 var_mode.set("mode1")
 
 notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip或.zip.001文件)")

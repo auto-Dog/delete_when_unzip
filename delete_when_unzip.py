@@ -37,7 +37,7 @@ def read_file_by_chunk(file,chunk_size=1024):
         shift_then_truncate(file,chunk_size)# [chunk_size:-1]的文件内容逐次向头部移动，相当于删除头部chunksize字节
         
 def main_unzip(file,chunk_size=1024,password=None):
-    '''在本地流式解压文件，边解压边删除. 注：password必须是二进制字符串'''
+    '''在本地流式解压文件，边解压边删除. '''
     chunk_size = int(chunk_size)    # python IO函数只支持int值参数
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
@@ -63,15 +63,20 @@ def main_unzip(file,chunk_size=1024,password=None):
     os.remove(file)
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1 or len(sys.argv) >3:
+    if len(sys.argv) <= 1 or len(sys.argv) >4:
         raise AttributeError('Wrong input param')
+    password = None
     if len(sys.argv) > 1:
         FILE_PATH = sys.argv[1]
         CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
     if len(sys.argv) > 2:
         FILE_PATH = sys.argv[1]
         CHUNK_SIZE = eval(sys.argv[2])
-    main_unzip(FILE_PATH,CHUNK_SIZE)
+    if len(sys.argv) > 3:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+        password = sys.argv[3]
+    main_unzip(FILE_PATH,CHUNK_SIZE,password)
 
     # from zipfile import ZipFile
 

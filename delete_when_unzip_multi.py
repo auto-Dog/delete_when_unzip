@@ -68,19 +68,24 @@ def main_unzip(file,chunk_size=1024,password=None):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
         if file_name != "":
-            with open(file_path_name,'wb+') as f:
+            with open(file_path_name,'wb+') as f1:
                 for chunk in unzipped_chunks:
-                    f.write(chunk)
-                f.close()
+                    f1.write(chunk)
+                f1.close()
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 or len(sys.argv) >3:
         raise AttributeError('Wrong input param')
+    password = None
     if len(sys.argv) > 1:
         FILE_PATH = sys.argv[1]
-        CHUNK_SIZE = 1024*1024*512  # 512MB per chunk
+        CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
     if len(sys.argv) > 2:
         FILE_PATH = sys.argv[1]
         CHUNK_SIZE = eval(sys.argv[2])
-    main_unzip(FILE_PATH,CHUNK_SIZE)
+    if len(sys.argv) > 3:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+        password = sys.argv[3]
+    main_unzip(FILE_PATH,CHUNK_SIZE,password)
 

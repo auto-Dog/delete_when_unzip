@@ -1,1 +1,2 @@
 stream_unzip==0.0.88
+libarchive-c==5.1
