@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # TODO: 测试可行性，以及加密后可行性
 import os
 import io
@@ -6,13 +7,15 @@ from stream_unzip import stream_unzip
 import sys
 import libarchive as libap
 
-global file_list
+
 file_list = []
 def remove_one_chunk():
     '''删除已解压的分段压缩文件'''
+    global file_list
     if len(file_list) == 0:
         return
     file = file_list.pop(0)
+    print('Removing:{}'.format(file))   # debug
     os.remove(file)
 
 def chain_streams(streams, buffer_size=io.DEFAULT_BUFFER_SIZE):
@@ -72,6 +75,7 @@ def chain_streams(streams, buffer_size=io.DEFAULT_BUFFER_SIZE):
                     # print('############ Finish')    # debug
                     self.stream = None
                     b = b''
+                    remove_one_chunk()
                     return 0  # indicate EOF
             output = chunk[:buffer_length]
             # print(len(chunk))   # debug
@@ -85,12 +89,16 @@ def unzip_buffer(e,file_root):
     
     for entry in e:
         rel_file_path = str(entry)    # 相对路径
-        # print(entry)    # debug
+        # print(entry.filetype,' ',rel_file_path)    # debug
         file_path_name = os.path.join(file_root,rel_file_path)
-        if rel_file_path.endswith('/'):   # 文件夹，不写入内容
+        if rel_file_path.endswith('/') or entry.filetype == 16384:   # 文件夹，不写入内容
             os.makedirs(file_path_name,exist_ok=True)
         else:
+            file_multi_path,basename = os.path.split(file_path_name)
+            os.makedirs(file_multi_path,exist_ok=True)
             with open(file_path_name, 'wb') as f1:  # 文件
+                # for block in entry.get_blocks():
+                #     f1.write(block)                
                 try:
                     for block in entry.get_blocks():
                         f1.write(block)
@@ -102,7 +110,7 @@ def generate_open_file_streams(filenames):
     count = 1
     for file in filenames:
         with open(file,'rb+') as f:
-            if len(filenames)>1 and count==1:   # 多分卷
+            if len(filenames)>1 and file.endswith('.z01'):   # 多分卷
                 f.seek(4)
             count+=1
             yield f
@@ -122,6 +130,9 @@ def main_unzip(file_path,chunk_size,password=None):
     file_basename,_ = os.path.splitext(file_basename_zip)
     if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
         file_basename,_ = os.path.splitext(file_basename)
+    if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
+        file_basename,_ = os.path.splitext(file_basename)
+    global file_list
     file_list = []
     files = os.listdir(file_path)
     # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
@@ -131,41 +142,37 @@ def main_unzip(file_path,chunk_size,password=None):
     pattern4 = re.compile(rf"{re.escape(file_basename)}\.r\d+",re.I)
     pattern5 = re.compile(rf"{re.escape(file_basename)}\.rar",re.I)
     pattern6 = re.compile(rf"{re.escape(file_basename)}\.rar\.\d+",re.I)
+    pattern7 = re.compile(rf"{re.escape(file_basename)}\.part\d+\.rar",re.I)
     for file in files:
         if pattern1.match(file) or pattern2.match(file) or pattern3.match(file) or\
-            pattern4.match(file) or pattern5.match(file) or pattern6.match(file):
+            pattern4.match(file) or pattern5.match(file) or pattern6.match(file) or pattern7.match(file):
         # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
             file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
     file_list.sort()    # 需按顺序读取
+    # print(file_list)    # debug
     fs = chain_streams(generate_open_file_streams(file_list),chunk_size)
-    if password != None:
-        password = password.encode()    # 存疑
+    # if password != None:
+    #     password = password.encode()    # 存疑
     with libap.stream_reader(fs,passphrase=password) as e:
         unzip_buffer(e,os.path.join(file_oripath,file_folder))
-    os.remove(file_path)
 
 if __name__ == '__main__':
-    # if len(sys.argv) <= 1 or len(sys.argv) >3:
-    #     raise AttributeError('Wrong input param')
+    if len(sys.argv) <= 1 or len(sys.argv) >3:
+        raise AttributeError('Wrong input param')
     password = None
-    # if len(sys.argv) > 1:
-    #     FILE_PATH = sys.argv[1]
-    #     CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
-    # if len(sys.argv) > 2:
-    #     FILE_PATH = sys.argv[1]
-    #     CHUNK_SIZE = eval(sys.argv[2])
-    # if len(sys.argv) > 3:
-    #     FILE_PATH = sys.argv[1]
-    #     CHUNK_SIZE = eval(sys.argv[2])
-    #     password = sys.argv[3]
-    FILE_PATH = 'E:/university/git/python/delete_when_unzip/test_files/文字346354789-1-208.rar'
+    if len(sys.argv) > 1:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
+    if len(sys.argv) > 2:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+    if len(sys.argv) > 3:
+        FILE_PATH = sys.argv[1]
+        CHUNK_SIZE = eval(sys.argv[2])
+        password = sys.argv[3]
     CHUNK_SIZE = 10_240_000
     main_unzip(FILE_PATH,CHUNK_SIZE,password)
 
-file_path = 'E:/university/git/python/delete_when_unzip/test_files/346354789-1-208.rar'
-file_path_2 = 'E:/university/git/python/delete_when_unzip/test_files/346354789-1-208.zip'
-file_path_1 = 'E:/university/git/python/delete_when_unzip/test_files/346354789-1-208.z01'
-os.chdir('E:/university/git/python/delete_when_unzip/test_files')
 # file_chunk_generator = read_file_by_chunk(file_path)
 # for chunk in file_chunk_generator:
 #     sys.stdout.write('UnRAR.exe x -si '+chunk.hex())

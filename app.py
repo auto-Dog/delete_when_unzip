@@ -7,6 +7,8 @@ from tkinter import ttk
 import threading
 from delete_when_unzip import main_unzip as single_unzip
 from delete_when_unzip_multi import main_unzip as multi_unzip
+from delete_when_unzip_rar import main_unzip as single_unzip_rar
+from delete_when_unzip_rar_multi import main_unzip as multi_unzip_rar
 import time
 import os
 import re
@@ -26,6 +28,7 @@ class ProcessManager:
     '''
     def __init__(self,mode:str,file_path:str,chunksize:int,password_str:str):
         self.mode = mode
+        self.use_libap = new_func_mode
         self.file_path = file_path
         self.chunksize = chunksize
         self.password_str = password_str
@@ -43,21 +46,29 @@ class ProcessManager:
         解压主进程
         '''
         try:
-            if self.mode == 'mode1':
-                unzip_func = single_unzip
-                self.fsize = os.path.getsize(self.file_path)*1.0
-            if self.mode == 'mode2':
-                unzip_func = multi_unzip
-                self.fsize = self.get_multi_filecounts()*1.0
+            if self.use_libap==0:
+                if self.mode == 'mode1':
+                    unzip_func = single_unzip
+                    self.fsize = os.path.getsize(self.file_path)*1.0
+                if self.mode == 'mode2':
+                    unzip_func = multi_unzip
+                    self.fsize = self.get_multi_filecounts()*1.0
+            elif self.use_libap==1:
+                if self.mode == 'mode1':
+                    unzip_func = single_unzip_rar
+                    self.fsize = os.path.getsize(self.file_path)*1.0
+                if self.mode == 'mode2':
+                    unzip_func = multi_unzip_rar
+                    self.fsize = self.get_multi_filecounts()*1.0
             print(self.password_str)    # debug
             unzip_func(self.file_path,self.chunksize,self.password_str)
         except Exception as e:
             err_message = str(e)
             print(err_message)
             if 'Rar!' in err_message or '7z' in err_message or '14' in err_message:
-                err_message = '不支持该类型文件(与文件加密工具有关，尽管后缀是.zip)'
-            if '\'str\' object' in err_message:
-                err_message = '预计解压太慢，不建议用此工具(每GB将耗费2小时)'
+                err_message = '不支持该类型文件(与文件加密算法有关)\n可尝试libarchive模式'
+            if 'Decryption is unsupported' in err_message:
+                err_message = '有密码解压，不能使用libarchive模式'
             messagebox.showerror("Error", err_message)
             self.end_process()
 
@@ -115,13 +126,20 @@ class ProcessManager:
         file_basename,_ = os.path.splitext(file_basename_zip)
         if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
             file_basename,_ = os.path.splitext(file_basename)
+        if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
+            file_basename,_ = os.path.splitext(file_basename)
         files = os.listdir(file_path)
         # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
         pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
         pattern2 = re.compile(rf"{re.escape(file_basename)}\.zip",re.I)
         pattern3 = re.compile(rf"{re.escape(file_basename)}\.zip\.\d+",re.I)
+        pattern4 = re.compile(rf"{re.escape(file_basename)}\.r\d+",re.I)
+        pattern5 = re.compile(rf"{re.escape(file_basename)}\.rar",re.I)
+        pattern6 = re.compile(rf"{re.escape(file_basename)}\.rar\.\d+",re.I)
+        pattern7 = re.compile(rf"{re.escape(file_basename)}\.part\d+\.rar",re.I)
         for file in files:
-            if pattern1.match(file) or pattern2.match(file) or pattern3.match(file):
+            if pattern1.match(file) or pattern2.match(file) or pattern3.match(file) or\
+                pattern4.match(file) or pattern5.match(file) or pattern6.match(file) or pattern7.match(file):
             # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
                 file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
         return len(file_list)
@@ -211,12 +229,10 @@ radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mod
 radio_mode1.pack()
 radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
 radio_mode2.pack()
-
+var_mode.set("mode1")
 new_func_mode = tk.IntVar()
 new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
 new_func_mode_box.pack()
-# new_func_mode = 
-var_mode.set("mode1")
 
 notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip或.zip.001文件)")
 notice.pack()
