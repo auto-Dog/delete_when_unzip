@@ -45,8 +45,8 @@ def main_unzip(file,chunk_size=1024,password=None):
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0
-    if password is not None:
-        password = password.encode()    # 必须是二进制字符串
+    # if password is not None:
+    #     password = password.encode()    # 必须是二进制字符串
     for file_path_name, file_size, unzipped_chunks in stream_unzip(file_chunks,password=password,chunk_size=chunk_size):
         # print('Processing chunk {}'.format(i))  # debug
         i+=1

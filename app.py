@@ -8,7 +8,8 @@ import threading
 from delete_when_unzip import main_unzip as single_unzip
 from delete_when_unzip_multi import main_unzip as multi_unzip
 from delete_when_unzip_rar import main_unzip as single_unzip_rar
-from delete_when_unzip_rar_multi import main_unzip as multi_unzip_rar
+from delete_when_unzip_rar_multi import main_unzip as multi_unzip_zc
+from delete_when_unzip_cli import main_unzip as multi_unzip_rar
 import time
 import os
 import re
@@ -27,8 +28,15 @@ class ProcessManager:
     解压前将文件名等参数传给该对象，开始解压时调用run()方法
     '''
     def __init__(self,mode:str,file_path:str,chunksize:int,password_str:str):
-        self.mode = mode
-        self.use_libap = new_func_mode
+        self.modemap = {
+            '单文件(single)，zip、tar.gz':0, 
+            '单文件(single)，RAR':1, 
+            '多文件(volumes)，zip':2,
+            '多文件(volumes)，rar':3,
+            '单文件，备选(single other)':4,
+            '多文件，备选(volumes other)':5
+        }
+        self.mode = self.modemap[mode]
         self.file_path = file_path
         self.chunksize = chunksize
         self.password_str = password_str
@@ -46,29 +54,38 @@ class ProcessManager:
         解压主进程
         '''
         try:
-            if self.use_libap==0:
-                if self.mode == 'mode1':
-                    unzip_func = single_unzip
-                    self.fsize = os.path.getsize(self.file_path)*1.0
-                if self.mode == 'mode2':
-                    unzip_func = multi_unzip
-                    self.fsize = self.get_multi_filecounts()*1.0
-            elif self.use_libap==1:
-                if self.mode == 'mode1':
-                    unzip_func = single_unzip_rar
-                    self.fsize = os.path.getsize(self.file_path)*1.0
-                if self.mode == 'mode2':
-                    unzip_func = multi_unzip_rar
-                    self.fsize = self.get_multi_filecounts()*1.0
+            if self.mode == 0:
+                unzip_func = single_unzip
+                self.fsize = os.path.getsize(self.file_path)*1.0
+            if self.mode == 1:
+                unzip_func = single_unzip_rar
+                self.fsize = os.path.getsize(self.file_path)*1.0
+
+            if self.mode == 2:
+                unzip_func = multi_unzip
+                self.fsize = self.get_multi_filecounts()*1.0
+            if self.mode == 3:
+                unzip_func = multi_unzip_rar
+                self.fsize = self.get_multi_filecounts()*1.0
+
+            if self.mode == 4:
+                unzip_func = single_unzip_rar
+                self.fsize = os.path.getsize(self.file_path)*1.0
+            if self.mode == 5:
+                unzip_func = multi_unzip_zc
+                self.fsize = self.get_multi_filecounts()*1.0
             print(self.password_str)    # debug
             unzip_func(self.file_path,self.chunksize,self.password_str)
         except Exception as e:
-            err_message = str(e)
+            err_message = repr(e)
             print(err_message)
-            if 'Rar!' in err_message or '7z' in err_message or '14' in err_message:
-                err_message = '不支持该类型文件(与文件加密算法有关)\n可尝试libarchive模式'
-            if 'Decryption is unsupported' in err_message:
-                err_message = '有密码解压，不能使用libarchive模式'
+            if 'Rar!' in err_message or '7z' in err_message or 'UnsupportedCompressionTypeError(14)' in err_message:
+                err_message = '不支持该类型文件(与文件加密算法有关)'
+            if 'Decryption is unsupported' in err_message or\
+                'Unsupported block header size' in err_message:
+                err_message = 'libarchive暂不支持rar单文件有密码解压'
+            if '\'str\' object cannot be interpreted as an integer' in err_message:
+                err_message = '请使用对应的备选模式'
             messagebox.showerror("Error", err_message)
             self.end_process()
 
@@ -88,12 +105,12 @@ class ProcessManager:
         first_checkpoint_limit = 20
         # 匀速更新进度条
         while True:
-            if self.mode == 'mode1':
+            if self.mode == 0 or self.mode == 1:
                 try:
                     new_val = 100.0 * (self.fsize-os.path.getsize(self.file_path))/self.fsize
                 except:
                     new_val = 100.0 # 处理完最后一个块后文件已经不存在,直接拉到100%进度
-            if self.mode == 'mode2':
+            if self.mode == 2 or self.mode == 3:
                 new_val = 100.0 * (self.fsize-self.get_multi_filecounts()) / self.fsize
             if new_val==100:
                 break
@@ -181,13 +198,16 @@ def run_program():
     # run_button['state'] = 'normal'
 
 def browse_file():
-    file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),('ZIP Seg Files','.zip.001'),('All Files','*')])
+    file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),
+                                                      ('ZIP Seg Files','.zip.001'),
+                                                      ('RAR Files','.rar .part1.rar'),
+                                                      ('All Files','*')])
     file_entry.delete(0, tk.END)
     file_entry.insert(0, file_path)
 
 # 创建主窗口
 window = tk.Tk()
-window.title("Delete when unzip(For BIIIIG zip file)")
+window.title("Delete when unzip(For BIIIIG zip/rar file)")
 window.iconbitmap('app_icon.ico')
 
 # 创建文件路径输入框和浏览按钮
@@ -199,7 +219,7 @@ browse_button = tk.Button(window, text="选择文件", command=browse_file)
 browse_button.pack()
 
 # 创建chunksize数值框
-number_label = tk.Label(window, text="Chunk size (MB):")
+number_label = tk.Label(window, text="解压块大小 (Chunk size, MB):")
 number_label.pack()
 # number_entry = tk.Entry(window)
 # number_entry.insert(0, "512")
@@ -215,26 +235,32 @@ def toggle_entry_state():
     else:
         password_entry.config(state=tk.DISABLED)
 checkbox_var = tk.IntVar()
-checkbox = tk.Checkbutton(window, text="使用密码:", variable=checkbox_var, command=toggle_entry_state)
+checkbox = tk.Checkbutton(window, text="使用密码(password):", variable=checkbox_var, command=toggle_entry_state)
 checkbox.pack()
 
 password_entry = tk.Entry(window, state=tk.DISABLED)
 password_entry.pack()
 
 # 创建模式选择区
-label_mode = tk.Label(window, text="选择模式:")
+label_mode = tk.Label(window, text="选择模式(mode):")
 label_mode.pack()
 var_mode = tk.StringVar()
-radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mode, value="mode1")
-radio_mode1.pack()
-radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
-radio_mode2.pack()
-var_mode.set("mode1")
-new_func_mode = tk.IntVar()
-new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
-new_func_mode_box.pack()
+cbox = ttk.Combobox(window,textvariable=var_mode)
+cbox['value'] = ('单文件(single)，zip、tar.gz', '单文件(single)，RAR', 
+                 '多文件(volumes)，zip', '多文件(volumes)，rar',
+                 '单文件，备选(single other)','多文件，备选(volumes other)')
+cbox.pack()
 
-notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip或.zip.001文件)")
+# radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mode, value="mode1")
+# radio_mode1.pack()
+# radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
+# radio_mode2.pack()
+# var_mode.set("mode1")
+# new_func_mode = tk.IntVar()
+# new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
+# new_func_mode_box.pack()
+
+notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip、.zip.001、part1文件)")
 notice.pack()
 
 # 创建运行按钮
