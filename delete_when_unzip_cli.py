@@ -27,7 +27,7 @@ def run_and_monitor_command(command):
             line = process.stdout.readline()
             if not line:
                 break
-            print(line, end='')  # 打印所有输出
+            # print(line, end='')  # 打印所有输出 # debug
             # 检查是否包含 "Extracting from"
             if "Extracting from" in line:
                 # print(f"Found 'Extracting from' in the output: {line.strip()}")# debug

@@ -23,7 +23,7 @@ def read_file_by_chunk(file_basepath,chunk_size=1024):
         if pattern1.match(file) or pattern2.match(file) or pattern3.match(file):
         # if file.startswith(file_basename) and os.path.isfile(os.path.join(file_path, file)):
             file_list.append(os.path.join(file_path, file)) # 将按照z01,z02,...zip顺序排列
-    print(file_list)    # debug
+    # print(file_list)    # debug
     for file in file_list:
         with open(file,'rb') as f: 
             _,file_ext = os.path.splitext(file) 
