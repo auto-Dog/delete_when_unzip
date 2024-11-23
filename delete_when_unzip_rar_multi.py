@@ -157,7 +157,7 @@ def main_unzip(file_path,chunk_size,password=None):
         unzip_buffer(e,os.path.join(file_oripath,file_folder))
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1 or len(sys.argv) >3:
+    if len(sys.argv) <= 1 or len(sys.argv) >4:
         raise AttributeError('Wrong input param')
     password = None
     if len(sys.argv) > 1:
