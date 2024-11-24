@@ -211,7 +211,7 @@ window.title("Delete when unzip(For BIIIIG zip/rar file)")
 window.iconbitmap('app_icon.ico')
 
 # 创建文件路径输入框和浏览按钮
-file_label = tk.Label(window, text="文件路径:")
+file_label = tk.Label(window, text="文件路径 (Path):")
 file_label.pack()
 file_entry = tk.Entry(window, width=50)
 file_entry.pack()
@@ -235,7 +235,7 @@ def toggle_entry_state():
     else:
         password_entry.config(state=tk.DISABLED)
 checkbox_var = tk.IntVar()
-checkbox = tk.Checkbutton(window, text="使用密码(password):", variable=checkbox_var, command=toggle_entry_state)
+checkbox = tk.Checkbutton(window, text="使用密码(Password):", variable=checkbox_var, command=toggle_entry_state)
 checkbox.pack()
 
 password_entry = tk.Entry(window, state=tk.DISABLED)
@@ -260,7 +260,7 @@ cbox.pack()
 # new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
 # new_func_mode_box.pack()
 
-notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip、.zip.001、part1文件)")
+notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip、.zip.001、part1文件\n解压分卷前，务必确认所有分卷完整)")
 notice.pack()
 
 # 创建运行按钮
