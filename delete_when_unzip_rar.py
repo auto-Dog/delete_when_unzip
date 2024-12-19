@@ -96,7 +96,7 @@ def chain_streams(streams, buffer_size=io.DEFAULT_BUFFER_SIZE):
     return io.BufferedReader(ChainStream(), buffer_size=buffer_size)
 
 def unzip_buffer(e,file_root):
-    ''' 解压一个buffer中的内容 '''
+    ''' 将已经解压的buffer中的内容写入文件 '''
     
     for entry in e:
         rel_file_path = str(entry)    # 相对路径
@@ -136,13 +136,18 @@ def main_unzip(file_path,chunk_size,password=None):
     global first_read_flag
     first_read_flag = True 
     fp = open(file_path,'rb+')
-    fs = chain_streams([fp],chunk_size)
-    # if password != None:
-    #     password = password.encode()    # 存疑
-    with libap.stream_reader(fs,passphrase=password) as e:
-        unzip_buffer(e,os.path.join(file_oripath,file_folder))
-    fp.close()
-    os.remove(file_path)
+    try:
+        fs = chain_streams([fp],chunk_size)
+        # if password != None:
+        #     password = password.encode()    # 存疑
+        with libap.stream_reader(fs,passphrase=password) as e:
+            unzip_buffer(e,os.path.join(file_oripath,file_folder))
+        fp.close()
+        if not first_read_flag:
+            os.remove(file_path)
+    except Exception as err:
+        fp.close()
+        raise err
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 or len(sys.argv) >4:

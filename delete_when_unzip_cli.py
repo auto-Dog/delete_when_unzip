@@ -53,7 +53,7 @@ def main_unzip(file_path,chunk_size=0,password=None):
     file_basename,_ = os.path.splitext(file_basename_zip)
     # if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
     #     file_basename,_ = os.path.splitext(file_basename)
-    if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
+    if file_basename.endswith('.part1') or file_basename.endswith('.part01'):    # 针对.part1.rar多重分段文件
         file_basename,_ = os.path.splitext(file_basename)
     file_folder = file_basename
     # if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件，不能让生成文件夹带后缀zip

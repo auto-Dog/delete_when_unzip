@@ -130,7 +130,7 @@ def main_unzip(file_path,chunk_size,password=None):
     file_basename,_ = os.path.splitext(file_basename_zip)
     if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
         file_basename,_ = os.path.splitext(file_basename)
-    if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
+    if file_basename.endswith('.part1') or file_basename.endswith('.part01'):    # 针对.part1.rar多重分段文件
         file_basename,_ = os.path.splitext(file_basename)
     global file_list
     file_list = []

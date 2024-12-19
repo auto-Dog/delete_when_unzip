@@ -78,14 +78,16 @@ class ProcessManager:
             unzip_func(self.file_path,self.chunksize,self.password_str)
         except Exception as e:
             err_message = repr(e)
-            print(err_message)
-            if 'Rar!' in err_message or '7z' in err_message or 'UnsupportedCompressionTypeError(14)' in err_message:
-                err_message = '不支持该类型文件(与文件加密算法有关)'
+            print('Error:'+err_message)
+            if '7z' in err_message or 'UnsupportedCompressionTypeError(14)' in err_message:
+                err_message = '不支持该类型文件(与文件加密算法有关)\n Unsupported compression algorithm'
+            if 'Rar!' in err_message:
+                err_message = '请选择RAR模式\n Please choose RAR mode'
             if 'Decryption is unsupported' in err_message or\
                 'Unsupported block header size' in err_message:
-                err_message = 'libarchive暂不支持rar单文件有密码解压'
+                err_message = 'libarchive暂不支持rar单文件有密码解压\n libarchive cannot decompress encrypted single RAR'
             if '\'str\' object cannot be interpreted as an integer' in err_message:
-                err_message = '请使用对应的备选模式'
+                err_message = '请使用对应的备选模式\n Please use other mode for single or volumes'
             messagebox.showerror("Error", err_message)
             self.end_process()
 
@@ -198,9 +200,11 @@ def run_program():
     # run_button['state'] = 'normal'
 
 def browse_file():
-    file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),
-                                                      ('ZIP Seg Files','.zip.001'),
-                                                      ('RAR Files','.rar .part1.rar'),
+    # file_path = filedialog.askopenfilename(filetypes=[('ZIP Files','.zip'),
+    #                                                   ('ZIP Seg Files','.zip.001'),
+    #                                                   ('RAR Files','.rar .part1.rar .part01.rar'),
+    #                                                   ('All Files','*')])
+    file_path = filedialog.askopenfilename(filetypes=[('ZIP/RAR Files','.zip .zip.001 .rar .part1.rar .part01.rar'),
                                                       ('All Files','*')])
     file_entry.delete(0, tk.END)
     file_entry.insert(0, file_path)
@@ -215,7 +219,7 @@ file_label = tk.Label(window, text="文件路径 (Path):")
 file_label.pack()
 file_entry = tk.Entry(window, width=50)
 file_entry.pack()
-browse_button = tk.Button(window, text="选择文件", command=browse_file)
+browse_button = tk.Button(window, text="选择文件(Choose)", command=browse_file)
 browse_button.pack()
 
 # 创建chunksize数值框
@@ -242,7 +246,7 @@ password_entry = tk.Entry(window, state=tk.DISABLED)
 password_entry.pack()
 
 # 创建模式选择区
-label_mode = tk.Label(window, text="选择模式(mode):")
+label_mode = tk.Label(window, text="选择模式(Mode):")
 label_mode.pack()
 var_mode = tk.StringVar()
 cbox = ttk.Combobox(window,textvariable=var_mode)
@@ -265,7 +269,7 @@ notice.pack()
 
 # 创建运行按钮
 run_state = tk.StringVar()
-run_state.set(" 运行 ")
+run_state.set(" 运行 (Run)")
 run_button = tk.Button(window, textvariable=run_state, command=run_program)
 run_button.pack()
 
