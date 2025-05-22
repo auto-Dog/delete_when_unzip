@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-# TODO: 设法完成分段zip的解压
 import os
 from stream_unzip import stream_unzip
 import sys
 import re
+from robust_split import robust_basename_split
 
 def read_file_by_chunk(file_basepath,chunk_size=1024):
     '''按块读取文件，可指定块大小'''
     file_path,file_basename_zip = os.path.split(file_basepath)
     if file_path == '':
         file_path = './'
-    file_basename,_ = os.path.splitext(file_basename_zip)
-    if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
-        file_basename,_ = os.path.splitext(file_basename)
+    file_basename = robust_basename_split(file_basename_zip)
     file_list = []
     files = os.listdir(file_path)
     # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
@@ -52,9 +50,9 @@ def main_unzip(file,chunk_size=1024,password=None):
     chunk_size = int(chunk_size)    # python IO函数只支持int值参数
     file_chunks = read_file_by_chunk(file,chunk_size)
     file_oripath,basename = os.path.split(file)
-    file_folder = os.path.splitext(basename)[0]
-    if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
-        file_folder,_ = os.path.splitext(file_folder)
+    file_folder = robust_basename_split(basename)
+    # if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+    #     file_folder,_ = os.path.splitext(file_folder)
     if not os.path.exists(os.path.join(file_oripath,file_folder)):
         os.makedirs(os.path.join(file_oripath,file_folder))
     i = 0

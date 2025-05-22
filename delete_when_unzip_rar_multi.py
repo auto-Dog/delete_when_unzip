@@ -6,7 +6,7 @@ import re
 from stream_unzip import stream_unzip
 import sys
 import libarchive as libap
-
+from robust_split import robust_basename_split
 
 file_list = []
 def remove_one_chunk():
@@ -117,24 +117,23 @@ def generate_open_file_streams(filenames):
 
 def main_unzip(file_path,chunk_size,password=None):
     '''在本地流式解压文件，边解压边删除. '''
-    file_oripath,basename = os.path.split(file_path)
-    file_folder = os.path.splitext(basename)[0]
-    if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件，不能让生成文件夹带后缀zip
-        file_folder,_ = os.path.splitext(file_folder)
-    if not os.path.exists(os.path.join(file_oripath,file_folder)):
-        os.makedirs(os.path.join(file_oripath,file_folder))
-
-    file_path,file_basename_zip = os.path.split(file_path)
-    if file_path == '':
-        file_path = './'
-    file_basename,_ = os.path.splitext(file_basename_zip)
-    if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
-        file_basename,_ = os.path.splitext(file_basename)
-    if file_basename.endswith('.part1') or file_basename.endswith('.part01'):    # 针对.part1.rar多重分段文件
-        file_basename,_ = os.path.splitext(file_basename)
+    dir_path,file_basename_zip = os.path.split(file_path)
+    if dir_path == '':
+        dir_path = './'
+    file_basename = robust_basename_split(file_basename_zip)
+    file_folder = file_basename
+    # if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件，不能让生成文件夹带后缀zip
+    #     file_folder,_ = os.path.splitext(file_folder)
+    if not os.path.exists(os.path.join(dir_path,file_folder)):
+        os.makedirs(os.path.join(dir_path,file_folder))
+    # file_basename,_ = os.path.splitext(file_basename_zip)
+    # if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+    #     file_basename,_ = os.path.splitext(file_basename)
+    # if file_basename.endswith('.part1') or file_basename.endswith('.part01'):    # 针对.part1.rar多重分段文件
+    #     file_basename,_ = os.path.splitext(file_basename)
     global file_list
     file_list = []
-    files = os.listdir(file_path)
+    files = os.listdir(dir_path)
     # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
     pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
     pattern2 = re.compile(rf"{re.escape(file_basename)}\.zip",re.I)
@@ -154,7 +153,7 @@ def main_unzip(file_path,chunk_size,password=None):
     # if password != None:
     #     password = password.encode()    # 存疑
     with libap.stream_reader(fs,passphrase=password) as e:
-        unzip_buffer(e,os.path.join(file_oripath,file_folder))
+        unzip_buffer(e,os.path.join(dir_path,file_folder))
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 or len(sys.argv) >4:

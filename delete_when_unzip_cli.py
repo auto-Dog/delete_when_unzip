@@ -3,7 +3,7 @@ import re
 import os
 import sys
 import time
-
+from robust_split import robust_basename_split
 file_list = []
 def remove_one_chunk():
     '''删除已解压的分段压缩文件'''
@@ -50,11 +50,7 @@ def main_unzip(file_path,chunk_size=0,password=None):
     dir_path,file_basename_zip = os.path.split(file_path)
     if dir_path == '':
         dir_path = './'
-    file_basename,_ = os.path.splitext(file_basename_zip)
-    # if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
-    #     file_basename,_ = os.path.splitext(file_basename)
-    if file_basename.endswith('.part1') or file_basename.endswith('.part01'):    # 针对.part1.rar多重分段文件
-        file_basename,_ = os.path.splitext(file_basename)
+    file_basename = robust_basename_split(file_basename_zip)
     file_folder = file_basename
     # if file_folder.endswith('.zip') or file_folder.endswith('.ZIP'):    # 针对.zip.00x多重分段文件，不能让生成文件夹带后缀zip
     #     file_folder,_ = os.path.splitext(file_folder)
@@ -77,7 +73,6 @@ def main_unzip(file_path,chunk_size=0,password=None):
             file_list.append(os.path.join(dir_path, file)) # 将按照part1,part2,...顺序排列
     file_list.sort()    # 需按顺序读取
     file_list = ['HEAD']+file_list
-    # print(file_list)    # debug
     # 使用示例
     # 请替换下面的 'name.exe -option1 xxx' 为你想要执行的命令
     command_to_run = ['./unrar.exe', 'x','-o+', file_path,os.path.join(dir_path,file_folder)]
