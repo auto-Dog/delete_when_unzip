@@ -10,6 +10,7 @@ from delete_when_unzip_multi import main_unzip as multi_unzip
 from delete_when_unzip_rar import main_unzip as single_unzip_rar
 from delete_when_unzip_rar_multi import main_unzip as multi_unzip_zc
 from delete_when_unzip_cli import main_unzip as multi_unzip_rar
+from robust_split import robust_basename_split
 import time
 import os
 import re
@@ -54,6 +55,17 @@ class ProcessManager:
         解压主进程
         '''
         try:
+            # 如果self.mode=0 1 4且file_path中有.part、.PART、.r01、.z01、.R01、.Z01，弹窗提醒是否正确。确认后后跳过，否则引起空错误。
+            if self.mode in [0, 1, 4]:
+                if re.search(r'\.(part\d{1,}|r\d{1,}|z\d{1,}|\d{3,})\.?(rar|zip)?$', self.file_path, re.I):
+                    confirm = messagebox.askyesno(
+                        "文件名警告",
+                        "检测到文件名包含分卷标记（如 .part、.r01、.z01 等），当前模式为单文件，是否继续？\n"
+                        "Detected split file marker in filename, but single file mode is selected. Continue?"
+                    )
+                    if not confirm:
+                        self.end_process()
+                        return
             if self.mode == 0:
                 unzip_func = single_unzip
                 self.fsize = os.path.getsize(self.file_path)*1.0
@@ -74,7 +86,7 @@ class ProcessManager:
             if self.mode == 5:
                 unzip_func = multi_unzip_zc
                 self.fsize = self.get_multi_filecounts()*1.0
-            print(self.password_str)    # debug
+            # print(self.password_str)    # debug
             unzip_func(self.file_path,self.chunksize,self.password_str)
         except Exception as e:
             err_message = repr(e)
@@ -107,12 +119,12 @@ class ProcessManager:
         first_checkpoint_limit = 20
         # 匀速更新进度条
         while True:
-            if self.mode == 0 or self.mode == 1:
+            if self.mode in (0,1,4):
                 try:
                     new_val = 100.0 * (self.fsize-os.path.getsize(self.file_path))/self.fsize
                 except:
                     new_val = 100.0 # 处理完最后一个块后文件已经不存在,直接拉到100%进度
-            if self.mode == 2 or self.mode == 3:
+            else:
                 new_val = 100.0 * (self.fsize-self.get_multi_filecounts()) / self.fsize
             if new_val==100:
                 break
@@ -129,7 +141,7 @@ class ProcessManager:
             # 更新进度条
             self.progress_bar['value'] = bar_top
             self.progress_bar.update()
-            time.sleep(0.1)
+            time.sleep(0.01)
             delta_n+=1
         messagebox.showinfo("Successfully Unzipped!","Successfully Unzipped!")
         self.end_process()
@@ -142,11 +154,15 @@ class ProcessManager:
         file_path,file_basename_zip = os.path.split(self.file_path)
         if file_path == '':
             file_path = './'
-        file_basename,_ = os.path.splitext(file_basename_zip)
-        if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
-            file_basename,_ = os.path.splitext(file_basename)
-        if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
-            file_basename,_ = os.path.splitext(file_basename)
+
+        file_basename = robust_basename_split(file_basename_zip)
+
+        # 旧的逻辑
+        # file_basename,_ = os.path.splitext(file_basename_zip)   # 只会分割出最后一个后缀名（xxx.part1 |.zip ）
+        # if file_basename.endswith('.zip') or file_basename.endswith('.ZIP'):    # 针对.zip.00x多重分段文件
+        #     file_basename,_ = os.path.splitext(file_basename)
+        # if file_basename.endswith('.part1'):    # 针对.part1.rar多重分段文件
+        #     file_basename,_ = os.path.splitext(file_basename)
         files = os.listdir(file_path)
         # 筛出file_basename.zip, file_basename.z01, file_basename.z02 ...
         pattern1 = re.compile(rf"{re.escape(file_basename)}\.z\d+",re.I)
@@ -156,6 +172,7 @@ class ProcessManager:
         pattern5 = re.compile(rf"{re.escape(file_basename)}\.rar",re.I)
         pattern6 = re.compile(rf"{re.escape(file_basename)}\.rar\.\d+",re.I)
         pattern7 = re.compile(rf"{re.escape(file_basename)}\.part\d+\.rar",re.I)
+
         for file in files:
             if pattern1.match(file) or pattern2.match(file) or pattern3.match(file) or\
                 pattern4.match(file) or pattern5.match(file) or pattern6.match(file) or pattern7.match(file):
@@ -165,13 +182,12 @@ class ProcessManager:
 
     def end_process(self):
         self.progress_bar['value'] = 100.0
-        run_state.set(" 运行 ")      # global var
+        run_state.set(" 运行 (Run)")      # global var
         run_button['state'] = 'normal'
         self.progress_bar.pack_forget()
 
 def run_program():
-    run_button['state'] = 'disable' # global var
-    run_state.set("运行中...")      # global var
+
     file_path = file_entry.get()
     number = number_entry.get()
     number = eval(number)*1024*1024
@@ -182,7 +198,13 @@ def run_program():
         password_str = password_entry.get()
     else:
         password_str = None
-
+    if mode=='' or file_path=='':
+        messagebox.showerror('未选择模式或文件！','未选择模式或文件！\n Empty file path or mode!') 
+        return
+    
+    # 运行前准备
+    run_button['state'] = 'disable' # global var
+    run_state.set("运行中...")      # global var
     process_unzip = ProcessManager(mode,file_path,number,password_str) # 采用多线程运行任务和控制进度条，非阻塞
     process_unzip.run() 
     # try:
@@ -204,7 +226,7 @@ def browse_file():
     #                                                   ('ZIP Seg Files','.zip.001'),
     #                                                   ('RAR Files','.rar .part1.rar .part01.rar'),
     #                                                   ('All Files','*')])
-    file_path = filedialog.askopenfilename(filetypes=[('ZIP/RAR Files','.zip .zip.001 .rar .part1.rar .part01.rar'),
+    file_path = filedialog.askopenfilename(filetypes=[('ZIP/RAR Files','.zip .zip.001 .rar .part1.rar .part01.rar .part001.rar'),
                                                       ('All Files','*')])
     file_entry.delete(0, tk.END)
     file_entry.insert(0, file_path)
@@ -254,15 +276,6 @@ cbox['value'] = ('单文件(single)，zip、tar.gz', '单文件(single)，RAR',
                  '多文件(volumes)，zip', '多文件(volumes)，rar',
                  '单文件，备选(single other)','多文件，备选(volumes other)')
 cbox.pack()
-
-# radio_mode1 = tk.Radiobutton(window, text="单个压缩文件", variable=var_mode, value="mode1")
-# radio_mode1.pack()
-# radio_mode2 = tk.Radiobutton(window, text="分卷压缩文件", variable=var_mode, value="mode2")
-# radio_mode2.pack()
-# var_mode.set("mode1")
-# new_func_mode = tk.IntVar()
-# new_func_mode_box = tk.Checkbutton(window, text="使用libarchive解压(支持大多压缩文件，\n但可能不稳定。解压RAR等必须选此模式)", variable=new_func_mode)
-# new_func_mode_box.pack()
 
 notice = tk.Label(window, text="(注意：文件解压后会被永久删除，请谨慎。\n分卷模式下只需要选择分卷索引.zip、.zip.001、part1文件\n解压分卷前，务必确认所有分卷完整)")
 notice.pack()
