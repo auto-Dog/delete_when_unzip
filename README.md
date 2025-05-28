@@ -36,4 +36,4 @@ _GOODNEWS FOR GAMERS! Big ZIP/RAR files can be unzipped under limited disk space
 * Support both single zip and segmented zip/RAR, both can be deleted when unzip. RAR is also supported now!
 
 * 注意：边解边删有中途解压失败的风险，失败可能导致压缩包损坏
-* ATTENTION: If error occurs when unzip&delete, the archive might be damaged.
+* ATTENTION: If error occurs when unzip&delete, the archive might be damaged by the programme.
