@@ -19,8 +19,8 @@ python app.py
 ```
 
 ---
-_对于大型游戏压缩文件解压需要翻倍空间的情况，这是一个值得拥有的工具. 可以边解压便删除完成部分_  
-_GOODNEWS FOR GAMERS! Big ZIP/RAR files can be unzipped under limited disk space，no need for doubled space. It deletes used parts when uncompressing archive._ 
+_对于大型游戏压缩文件解压需要翻倍磁盘空间的情况，这是一个值得拥有的工具。这个工具可以边解压边删除完成解压的部分，因此无须空间翻倍_  
+_GOODNEWS FOR GAMERS! Big ZIP/RAR files can be unzipped under limited disk space，no need for doubled space. It deletes used parts when uncompressing archive, so no more double space is required._ 
 
 * 通常，下载并解压100G的游戏压缩文件需要至少200G的空间，对硬盘空间有限的用户及其不友好
 * Usually, a 100G game requires at least 200G disk space when download and unzip, which is bad for users with limited space  
