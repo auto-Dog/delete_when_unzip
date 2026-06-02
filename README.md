@@ -1,39 +1,30 @@
-# Delete When Unzip ——边解压边删除的解压工具
----
-## Usage
-```bash
-pip install -r requirements.txt
-```
-
-```bash
-python delete_when_unzip.py filepath chunk_size(byte) password(optional)   # 1 zip file, support zip
-python delete_when_unzip_rar.py filepath chunk_size(byte) password(optional)   # 1 zip file, support rar, etc.
-
-# when unzip segmented ones (multi-volume archives)
-python delete_when_unzip_multi.py filepath(name of the main volume, *.zip) chunk_size(byte) password(optional)   # segmented zip files,  support zip
-python delete_when_unzip_rar_multi.py filepath(name of the main volume, *.zip) chunk_size(byte) password(optional) # segmented zip files, support rar, etc.
-```
-Visualize interface:
-```bash
-python app.py
-```
 
 ---
-_对于大型游戏压缩文件解压需要翻倍磁盘空间的情况，这是一个值得拥有的工具。这个工具可以边解压边删除完成解压的部分，因此无须空间翻倍_  
-_GOODNEWS FOR GAMERS! Big ZIP/RAR files can be unzipped under limited disk space，no need for doubled space. It deletes used parts when uncompressing archive, so no more double space is required._ 
 
-* 通常，下载并解压100G的游戏压缩文件需要至少200G的空间，对硬盘空间有限的用户及其不友好
-* Usually, a 100G game requires at least 200G disk space when download and unzip, which is bad for users with limited space  
+_对于大型游戏压缩文件解压需要翻倍磁盘空间的情况，这是一个值得拥有的工具。该工具可以边解压边删除已完成解压的部分，因此无须空间翻倍。_  
+_GOOD NEWS FOR GAMERS! Large ZIP/RAR archives can be extracted with limited disk space—no need for double the space. The tool deletes processed parts while extracting, so you don’t need extra room to keep both the full archive and the extracted files._
 
-* 本工具利用流式解压库`stream_unzip`，将本地压缩文件按顺序流式读取到内存，每次读取固定大小的块并解压。在解压过一部分块后，立即删除原压缩文件的块，因此解压过程中对硬盘的占用将远远小于压缩文件的2倍。NEW: 使用libarchive库，自行构建了文件流读取器，支持zip，rar，tar等。利用unrar cli工具可以高效解压并删除分卷rar（windows下可用）
+- 通常，下载并解压 100G 的游戏压缩文件需要至少 200G 的空间，这对硬盘空间有限的用户非常不友好  
+- Usually, downloading and extracting a 100G game archive requires at least 200G of disk space, which is painful for users with limited storage.
 
-* The program imports `stream_unzip` and sees local ZIP file as a stream. For each iteration it reads a chunk into memory then apply unzip algorithm. After 'unzip a chunk', it deteles the in original ZIP file, thus keeps a low usage of disk space(at least you donnot need doubled space to unzip) NEW: use libarchive library with custome file streamer. Now support zip，rar，tar.gz files. For Windows User a unrar CLI interface is efficiently used for rar volumes。
+- 本工具利用流式解压库 `stream_unzip`，将本地压缩文件按顺序以流的形式读取到内存：每次读取固定大小的块并解压；当某部分内容解压完成后，立即删除原压缩文件中已处理的块，从而显著降低解压过程中的磁盘占用。  
+  NEW：使用 libarchive 库并实现自定义文件流读取器，支持 zip、rar、tar 等格式；在 Windows 上可通过 unrar CLI 高效解压并删除分卷 rar。  
 
-  
-  
-* 支持单文件和**分段zip,RAR文件**(大多游戏资源文件形式，如原神)边解压边删除。当前支持zip,rar类型文件
+- This tool uses the streaming extraction library `stream_unzip` and treats a local archive as a stream: it reads fixed-size chunks into memory and extracts them; after a chunk is processed, the corresponding part of the original archive is deleted to keep disk usage low (i.e., you don’t need double the space).  
+  NEW: A custom file streamer based on libarchive is included, supporting ZIP, RAR, TAR, etc. On Windows, an unrar CLI interface can be used to efficiently extract and delete multi-volume RAR archives.
 
-* Support both single zip and segmented zip/RAR, both can be deleted when unzip. RAR is also supported now!
+- 支持单文件与**分段 zip / RAR 文件**（常见于大型游戏资源，如原神）边解压边删除；当前支持 zip、rar 等格式  
+- Supports both single archives and **segmented ZIP/RAR** archives. Deleting during extraction is supported, and RAR is supported as well.
 
-* 注意：边解边删有中途解压失败的风险，失败可能导致压缩包损坏
-* ATTENTION: If error occurs when unzip&delete, the archive might be damaged by the programme.
+- 注意：边解压边删除存在中途解压失败的风险，失败可能导致压缩包损坏  
+- ATTENTION: If an error occurs during “extract & delete”, the archive may be damaged.
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=auto-Dog%2Fdelete_when_unzip&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left" />
+ </picture>
+</a>
