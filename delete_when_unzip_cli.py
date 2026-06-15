@@ -4,7 +4,15 @@ import os
 import sys
 import time
 from robust_split import robust_basename_split
+
 file_list = []
+
+
+def _natural_sort_key(path):
+    parts = re.split(r"(\d+)", os.path.basename(path).lower())
+    return [int(part) if part.isdigit() else part for part in parts]
+
+
 def remove_one_chunk():
     '''删除已解压的分段压缩文件'''
     global file_list
@@ -15,6 +23,7 @@ def remove_one_chunk():
         return
     # print('Removing:{}'.format(file))   # debug
     os.remove(file)
+
 
 def run_and_monitor_command(command):
     '''子进程启动外部程序'''
@@ -39,11 +48,15 @@ def run_and_monitor_command(command):
             if "All OK" in line:
                 # print("Finished")   # debug
                 remove_one_chunk()
+        return_code = process.wait()
+        if return_code != 0:
+            raise subprocess.CalledProcessError(return_code, command)
     # except Exception as e:    # 在app层处理该错误
     #     print(f"An error occurred: {e}")
     finally:
         # 等待程序结束
         process.communicate()
+
 
 def main_unzip(file_path,chunk_size=0,password=None):
     '''在本地流式解压文件，边解压边删除. '''
@@ -68,10 +81,11 @@ def main_unzip(file_path,chunk_size=0,password=None):
     pattern6 = re.compile(rf"{re.escape(file_basename)}\.rar\.\d+",re.I)
     pattern7 = re.compile(rf"{re.escape(file_basename)}\.part\d+\.rar",re.I)
     for file in files:
+        # if pattern1.match(file) or pattern2.match(file) or pattern3.match(file) or pattern4.match(file) or pattern5.match(file) or pattern6.match(file) or pattern7.match(file):
         if pattern4.match(file) or pattern5.match(file) or pattern6.match(file) or pattern7.match(file):
         # if file.startswith(file_basename) and os.path.isfile(os.path.join(dir_path, file)):
             file_list.append(os.path.join(dir_path, file)) # 将按照part1,part2,...顺序排列
-    file_list.sort()    # 需按顺序读取
+    file_list.sort(key=_natural_sort_key)    # 需按顺序读取
     file_list = ['HEAD']+file_list
     # 使用示例
     # 请替换下面的 'name.exe -option1 xxx' 为你想要执行的命令
@@ -79,6 +93,7 @@ def main_unzip(file_path,chunk_size=0,password=None):
     if password != None:
         command_to_run = ['./unrar.exe', 'x','-p'+password,'-o+', file_path,os.path.join(dir_path,file_folder)]
     run_and_monitor_command(command_to_run)
+
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 or len(sys.argv) >4:
@@ -89,10 +104,10 @@ if __name__ == '__main__':
         CHUNK_SIZE = 1024*1024*512.0  # 512MB per chunk
     if len(sys.argv) > 2:
         FILE_PATH = sys.argv[1]
-        CHUNK_SIZE = eval(sys.argv[2])
+        CHUNK_SIZE = int(sys.argv[2])
     if len(sys.argv) > 3:
         FILE_PATH = sys.argv[1]
-        CHUNK_SIZE = eval(sys.argv[2])
+        CHUNK_SIZE = int(sys.argv[2])
         password = sys.argv[3]
     CHUNK_SIZE = 10_240_000
     main_unzip(FILE_PATH,CHUNK_SIZE,password)
