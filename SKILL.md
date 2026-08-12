@@ -5,7 +5,7 @@ description: Use when the user wants to extract/unpack large ZIP or RAR archives
 
 # Delete When Unzip — 边解压边删除的解压工具
 
-Stream-extract a local archive **chunk by chunk, deleting each processed part of the original archive** as you go. For example, a 100 GB game archive can be extracted with roughly **100 GB + 1 chunk** of free space instead of 200 GB. Source files live in this repo (git root = `src/`).
+Stream-extract a local archive **chunk by chunk, deleting each processed part of the original archive** as you go. For example, a 100 GB game archive can be extracted with roughly **100 GB + 1 chunk** of free space instead of 200 GB. Source files live in this repo.
 
 ## What the user is asking for
 
@@ -85,7 +85,7 @@ python delete_when_unzip_rar_multi.py <main_volume> [chunk_size_bytes] [password
 | `'Rar!'` in the error | must run in RAR mode — pick `delete_when_unzip_rar.py`/CLI |
 | `Decryption is unsupported` / `Unsupported block header size` | libarchive **cannot decrypt an encrypted single RAR** — use the unrar CLI path instead |
 | `'str' object cannot be interpreted as an integer` | wrong mode selected for the file — switch single↔volumes |
-| `unrar.exe` / `./unrar.exe` not found | `delete_when_unzip_cli.py` invokes `./unrar.exe` relative to cwd — **run from the repo dir** (`src/`), or get the right unrar for the platform from rarlab.com |
+| `unrar.exe` / `./unrar.exe` not found | `delete_when_unzip_cli.py` invokes `./unrar.exe` relative to cwd — **run from the repo dir**, or get the right unrar for the platform from rarlab.com |
 | huge archive, very slow | it is the O(n²) `shift_then_truncate` with small chunks on a giant file — accept the wait or use the unrar CLI path |
 
 Platform notes: the unrar CLI path is Windows-oriented (bundled `unrar.exe`); the libarchive path is cross-platform but may need the compiled `boosting/` weak-decrypt module for encrypted zips. GUI chunk size is entered in **MB**.
