@@ -17,14 +17,14 @@ _GOOD NEWS FOR GAMERS! Large ZIP/RAR archives can be extracted with limited disk
 - Supports both single archives and **segmented ZIP/RAR** archives. Deleting during extraction is supported, and RAR is supported as well.
 
 - 注意：边解压边删除存在中途解压失败的风险，失败可能导致压缩包损坏  
-- ATTENTION: If an error occurs during “extract & delete”, the archive may be damaged.
+- ATTENTION: If an error occurs during _extract & delete_, the archive may be damaged.
 
 ## Star History
 
 <a href="https://www.star-history.com/?repos=auto-Dog%2Fdelete_when_unzip&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&theme=dark&legend=top-left&sealed_token=xdwL7FsYDLXc-LJ6F9EsMUPtLbfUeOI0CctBsOZwrGr-tSgCxUl6du2tqNrFweG5PRv9-FChsG385agEqZtnpNvqWMqOaG6SBgOuG5Ud9QWNjy7T9Me9gw" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left&sealed_token=xdwL7FsYDLXc-LJ6F9EsMUPtLbfUeOI0CctBsOZwrGr-tSgCxUl6du2tqNrFweG5PRv9-FChsG385agEqZtnpNvqWMqOaG6SBgOuG5Ud9QWNjy7T9Me9gw" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=auto-Dog/delete_when_unzip&type=date&legend=top-left&sealed_token=xdwL7FsYDLXc-LJ6F9EsMUPtLbfUeOI0CctBsOZwrGr-tSgCxUl6du2tqNrFweG5PRv9-FChsG385agEqZtnpNvqWMqOaG6SBgOuG5Ud9QWNjy7T9Me9gw" />
  </picture>
 </a>
