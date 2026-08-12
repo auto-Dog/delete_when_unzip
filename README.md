@@ -1,5 +1,51 @@
 # Delete When Unzip
 
+---
+## Usage
+Install: 
+```bash
+pip install -r requirements.txt
+```
+
+Install as Agent Skill (for Codex, CC, etc.):
+```text
+Install the skill from https://github.com/auto-Dog/delete_when_unzip.git and read `skill.md`.
+```
+
+### When unzip single archive files:
+Single archived file, for `.zip` format:
+```bash
+python delete_when_unzip.py filepath chunk_size(byte) password(optional)
+```
+Single archived file, for `.rar` format:
+```bash
+python delete_when_unzip_rar.py filepath chunk_size(byte) password(optional)
+```
+
+### When unzip segmented ones (multi-volume archives)
+Segmented rar files, for `.zip.001`, `.z01` format:
+```bash
+python delete_when_unzip_cli.py filepath(name of the main volume) chunk_size(byte) password(optional)
+```
+
+Segmented rar files, for `.rar.001`, `.part1.rar` format:
+```bash
+python delete_when_unzip_rar_multi.py filepath(name of the main volume) chunk_size(byte) password(optional)
+```
+
+Segmented rar files, for `.rar.001`, `.part1.rar` format **(Recommand)**:
+
+```bash
+python delete_when_unzip_cli.py filepath(name of the main volume) chunk_size(byte) password(optional)
+```
+Note: This version uses `unrar.exe` and monitor cli progress, for windows x64. If you are using other systems, find your suitable version at [https://www.rarlab.com/download.htm](https://www.rarlab.com/download.htm).
+
+Visualize interface:
+```bash
+python app.py
+```
+
+---
 
 _对于大型游戏压缩文件解压需要翻倍磁盘空间的情况，这是一个值得拥有的工具。该工具可以边解压边删除已完成解压的部分，因此无须空间翻倍。_  
 _GOOD NEWS FOR GAMERS! Large ZIP/RAR archives can be extracted with limited disk space—no need for double the space. The tool deletes processed parts while extracting, so you don’t need extra room to keep both the full archive and the extracted files._
