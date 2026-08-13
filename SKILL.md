@@ -100,3 +100,4 @@ Platform notes: the unrar CLI path is Windows-oriented (bundled `unrar.exe`); th
 ## Other Rules
 1. Answer user in the language they used to ask the question.
 2. List the files that will be processed before running the script, and confirm with the user that they want to proceed.
+3. Try to uncomment all #debug sentences so that you can monitor the process during unzip. Once an error occurs, stop the delete when unzip process to avoid delete!
