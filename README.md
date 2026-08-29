@@ -34,7 +34,7 @@ Segmented rar files, for `.rar.001`, `.part1.rar` format:
 python delete_when_unzip_rar_multi.py filepath(name of the main volume) chunk_size(byte) password(optional)
 ```
 
-Segmented rar files, for `.rar.001`, `.part1.rar` format **(Recommand)**:
+Segmented rar files, for `.rar.001`, `.part1.rar` format **(Recommend)**:
 
 ```bash
 python delete_when_unzip_cli.py filepath(name of the main volume) chunk_size(byte) password(optional)
