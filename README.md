@@ -7,10 +7,11 @@ Install:
 pip install -r requirements.txt
 ```
 
-Install as Agent Skill (for Codex, CC, etc.):
+**Install as Agent Skill** (for Codex, CC, etc.):
 ```text
 Install the skill from https://github.com/auto-Dog/delete_when_unzip.git and read `skill.md`.
 ```
+**We recommend Linux and MacOS users use agent skill for installation and usage.**
 
 ### When unzip single archive files:
 Single archived file, for `.zip` format:
